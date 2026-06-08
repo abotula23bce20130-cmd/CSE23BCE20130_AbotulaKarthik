@@ -1,0 +1,340 @@
+1. Find all students from the CS department with marks greater than 80
+db.students.find({
+    dept: "CS",
+    marks: { $gt: 80 }
+})
+
+Output:
+
+{ _id: 1, name: "Ananya", dept: "CS", marks: 88, ... }
+{ _id: 3, name: "Meena",  dept: "CS", marks: 95, ... }
+
+2. Find students whose marks are between 60 and 85 (inclusive) using $gte and $lte
+db.students.find({
+    marks: {
+        $gte: 60,
+        $lte: 85
+    }
+})
+
+{ _id: 2, name: "Arjun", marks: 74, ... }
+{ _id: 4, name: "Ravi", marks: 61, ... }
+{ _id: 5, name: "Kavya", marks: 82, ... }
+{ _id: 7, name: "Priya", marks: 79, ... }
+{ _id: 9, name: "Rekha", marks: 68, ... }
+
+
+3. Find all students who are either from IT or ECE department using $in
+db.students.find({
+    dept: {
+        $in: ["IT", "ECE"]
+    }
+})
+
+Output:
+
+{ _id: 2,  name: "Arjun",  dept: "IT",  ... }
+{ _id: 4,  name: "Ravi",   dept: "ECE", ... }
+{ _id: 5,  name: "Kavya",  dept: "IT",  ... }
+{ _id: 7,  name: "Priya",  dept: "ECE", ... }
+{ _id: 8,  name: "Suresh", dept: "IT",  ... }
+{ _id: 10, name: "Vijay",  dept: "ECE", ... }
+
+4. Find students NOT in the CS department using $nin and project only name and dept
+db.students.find(
+   { dept: { $nin: ["CS"] } },
+   { _id: 0, name: 1, dept: 1 }
+)
+Output
+{ name: "Arjun", dept: "IT" }
+{ name: "Ravi", dept: "ECE" }
+{ name: "Kavya", dept: "IT" }
+{ name: "Priya", dept: "ECE" }
+{ name: "Suresh", dept: "IT" }
+{ name: "Vijay", dept: "ECE" }
+
+Explanation
+
+$nin      → Not In
+_id: 0    → Hide _id field
+name: 1   → Show name field
+dept: 1   → Show dept field
+
+5. Find students NOT in the CS department using $nin and project only name and dept
+
+(Same as Question 4)
+
+db.students.find(
+   { dept: { $nin: ["CS"] } },
+   { _id: 0, name: 1, dept: 1 }
+)
+Exam Shortcut
+db.students.find(
+   {dept: {$nin:["CS"]}},
+   {_id:0, name:1, dept:1}
+)
+
+Result: Returns only students from IT and ECE departments, displaying only name and dept fields.
+
+6. Find students where the address.city is 'Chennai' using dot notation
+db.students.find({
+    "address.city": "Chennai"
+})
+Output
+{ _id: 1, name: "Ananya", ... }
+{ _id: 3, name: "Meena", ... }
+{ _id: 7, name: "Priya", ... }
+
+7. Find total revenue per category using $group and $sum on a computed field (price × sold)
+db.products.aggregate([
+{
+    $group: {
+        _id: "$category",
+        totalRevenue: {
+            $sum: {
+                $multiply: ["$price", "$sold"]
+            }
+        }
+    }
+}
+])
+Expected Result
+{
+  "_id": "Electronics",
+  "totalRevenue": 14585000
+}
+{
+  "_id": "Furniture",
+  "totalRevenue": 612000
+}
+{
+  "_id": "Books",
+  "totalRevenue": 629000
+}
+
+8. Use aggregation to find total number of students and average marks per department
+db.students.aggregate([
+{
+    $group: {
+        _id: "$dept",
+        totalStudents: { $sum: 1 },
+        averageMarks: { $avg: "$marks" }
+    }
+}
+])
+
+9. Remove the scholarship field from all students using $unset
+
+db.students.updateMany(
+   {},
+   {
+      $unset: {
+         scholarship: ""
+      }
+   }
+)
+
+
+10. Add a new field scholarship with value false to all CS students using $set
+
+db.students.updateMany(
+   { dept: "CS" },
+   {
+      $set: {
+         scholarship: false
+      }
+   }
+)
+Explanation
+dept:"CS"     → selects CS students
+$set          → adds/updates field
+scholarship:false
+After Update
+{
+  _id: 1,
+  name: "Ananya",
+  dept: "CS",
+  scholarship: false
+}
+
+{
+  _id: 3,
+  name: "Meena",
+  dept: "CS",
+  scholarship: false
+}
+
+{
+  _id: 6,
+  name: "Dinesh",
+  dept: "CS",
+  scholarship: false
+}
+
+{
+  _id: 9,
+  name: "Rekha",
+  dept: "CS",
+  scholarship: false
+}
+
+10. Increment marks of student with _id: 6 by 10 using $inc
+
+db.students.updateOne(
+   { _id: 6 },
+   {
+      $inc: {
+         marks: 10
+      }
+   }
+)
+Explanation
+Current Marks = 55
+After Update  = 65
+
+11. Find the 3rd and 4th highest scoring students using sort, skip, and limit
+
+db.students.find()
+.sort({ marks: -1 })
+.skip(2)
+.limit(2)
+Explanation
+sort({marks:-1}) → Highest to Lowest
+skip(2)          → Skip top 2 students
+limit(2)         → Get next 2 students
+Sorted Marks
+Meena   - 95
+Suresh  - 90
+Ananya  - 88   ← 3rd
+Kavya   - 82   ← 4th
+Priya   - 79
+Arjun   - 74
+Rekha   - 68
+Ravi    - 61
+Dinesh  - 55
+Vijay   - 45
+
+12. Find employees whose salary is greater than 50000 and experience greater than 5
+db.employees.find({
+   salary: { $gt: 50000 },
+   experience: { $gt: 5 }
+})
+Output
+Rahul
+Karthik
+
+13. Find employees whose skills array size is greater than 2
+
+MongoDB doesn't support $size > 2 directly, so use aggregation:
+
+db.employees.aggregate([
+{
+   $match: {
+      $expr: {
+         $gt: [
+            { $size: "$skills" },
+            2
+         ]
+      }
+   }
+}
+])
+Output
+Arun
+Rahul
+Karthik
+
+(All have 3 skills)
+
+14. Find departments whose average salary is greater than 50000
+
+db.employees.aggregate([
+{
+   $group: {
+      _id: "$department",
+      avgSalary: {
+         $avg: "$salary"
+      }
+   }
+},
+{
+   $match: {
+      avgSalary: { $gt: 50000 }
+   }
+}
+])
+Expected Output
+{
+   _id: "IT",
+   avgSalary: 62666.67
+}
+{
+   _id: "HR",
+   avgSalary: 55000
+}
+
+15. Find minimum salary in each department
+
+Use aggregation with $group and $min.
+
+db.employees.aggregate([
+{
+   $group: {
+      _id: "$department",
+      minSalary: {
+         $min: "$salary"
+      }
+   }
+}
+])
+
+16. Rename field city to location
+
+Use $rename.
+
+db.employees.updateMany(
+   {},
+   {
+      $rename: {
+         "city": "location"
+      }
+   }
+)
+
+17. Find products where stock is of type Number using $type operator
+db.products.find({
+   stock: { $type: "number" }
+})
+Output
+{ _id: 101, name: "Laptop", stock: 20, ... }
+{ _id: 102, name: "Phone", stock: 50, ... }
+{ _id: 103, name: "Headphones", stock: 80, ... }
+{ _id: 104, name: "Desk Chair", stock: 15, ... }
+{ _id: 105, name: "Bookshelf", stock: 30, ... }
+{ _id: 106, name: "Python Book", stock: 100, ... }
+{ _id: 107, name: "Data Science", stock: 70, ... }
+{ _id: 108, name: "Keyboard", stock: 0, ... }
+{ _id: 109, name: "Monitor", stock: 10, ... }
+{ _id: 110, name: "Mouse", stock: 120, ... }
+
+18. Set the active status to true for all inactive students using updateMany and $set
+db.students.updateMany(
+   { active: false },
+   {
+      $set: {
+         active: true
+      }
+   }
+)
+Output
+{
+   "acknowledged" : true,
+   "matchedCount" : 3,
+   "modifiedCount" : 3
+}
+
+Updated Students:
+
+{ _id: 4, name: "Ravi", active: true }
+{ _id: 8, name: "Suresh", active: true }
+{ _id: 10, name: "Vijay", active: true }
