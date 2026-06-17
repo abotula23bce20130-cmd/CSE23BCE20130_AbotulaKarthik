@@ -110,3 +110,34 @@ db.employees.find({
     salary: { $gt: 50000 }
 })
 ```
+
+Q15. Find employees neither in IT nor HR.
+    db.employees.find({department:{$nin:["IT","HR"]}})
+
+
+Q16. Find documents containing experience field.
+    db.employees.find({experience:{$exists:true}})
+
+Q17. Find documents where salary is Integer.
+    db.employees.find({salary:{$type:"int"}})
+
+Q18. Find employees having MongoDB skill.
+    db.employees.find({skills:"MongoDB"})
+
+Q19. Find employees having both MongoDB and AWS.
+     db.employees.find({skills:{$all:["MongoDB","AWS"]}})
+
+Q20. Find employees with exactly 3 skills.
+    db.employees.find({skills:{$size:3}})
+
+Q22. Display employees sorted by salary descending.
+    db.employees.find({skills:{$elemMatch:{$eq:"Java"}}})
+
+Q23. Display top 3 highest paid employees.
+     db.employees.find().sort({salary:-1})
+
+Q24. Increase salary of employee 101 by 5000.
+    db.employees.updateOne({empId:101},{$inc:{salary:5000}})
+
+Q25. Increase salary of all IT employees by 10%.
+    db.employees.updateMany({department:"IT"},{$mul:{salary:1.1}})
